@@ -76,6 +76,35 @@ To ensure Hardcore-Henry goes online the second your PC boots up—without needi
 
 ---
 
+## ⚡ Bulk Data Extraction & Documentation Ingestion (Admin Guide)
+
+To make Henry instantly familiar with your specific MSP environments, you can bulk-export structural tracking tables from your management software instead of copying assets one by one.
+
+### 🔐 1. KaseyaOne & IT Glue (Global Documentation Export)
+If you possess Admin privileges, you can compile your entire IT Glue platform data structure into a unified, encrypted backup.
+1. Log into your IT Glue portal, and click **Admin** in the top navigation bar.
+2. Navigate to the left-hand sidebar and select **Export Data**.
+3. Under *Export Options*, choose **Entire account** (or filter down to a specific customer layout under *Data for an organization*).
+4. Check **Encrypt export with password** to secure credential and configuration files.
+5. Click **Start Export**. IT Glue will email you a secure download link containing organized CSV and HTML tables of all your assets.
+
+### 💻 2. Datto RMM (Global Device Asset Bulk Export)
+To train Henry on your endpoints, software inventories, and monitor alerts, extract the complete device grid:
+1. Log into your Datto RMM dashboard.
+2. Navigate to **Devices** ➔ **All Devices**.
+3. Click the **Export All Rows to CSV** button in the top right corner of the device list grid.
+4. Save the compiled data spreadsheet directly to your computer.
+
+### 📥 3. Uploading Bulk Data into Hardcore-Henry
+Once you have your enterprise CSVs or HTML tables extracted, import them to Open WebUI all at once:
+1. Log into your public **Open WebUI** dashboard as an Admin.
+2. Go to **Workspace** ➔ **Documents**.
+3. Click the **Upload Documents** button.
+4. Drag and drop your bulk IT Glue asset CSV files and Datto RMM device tables directly into the browser.
+5. In your chat prompt windows, simply type `#` followed by the file name (e.g., `#Datto_RMM_Devices`) to instruct Henry to reference entire enterprise configurations instantly!
+
+---
+
 ## ⚠️ Critical Post-Installation Fixes (Error Prevention)
 
 ### Fix 1: Resolving "Ollama: Network Problem" in the UI
