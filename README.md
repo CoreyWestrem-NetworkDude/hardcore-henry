@@ -7,7 +7,7 @@ This production guide walks you through setting up the AI engine, deploying the 
 ---
 
 ## 🏗️ Technical Architecture
-* **Core Engine:** Ollama running local `llama3` base weights.
+* **Core Engine:** Ollama running local `qwen2.5vl:3b` vision base weights.
 * **Web Interface:** Open WebUI deployed via Docker Bridge Network.
 * **Secure Ingress:** Cloudflare Tunnel (`cloudflared`) bypassing local firewall restrictions.
 * **OS Automation:** Native Linux Systemd Service configuration.
@@ -119,6 +119,12 @@ Open WebUI attempts to inject background tools into the model prompt string by d
 3. Under the **Builtin Tools / Capabilities** section, **uncheck all active tool choices** (Web Search, Image Gen, etc.).
 4. Click **Save & Update**.
 
+### Fix 3: Handling High-Resolution Mobile Image Upload Crashes (Error 400)
+When technicians upload raw smartphone photographs of error text or hardware layouts, the default 4,096 context block will instantly saturate, returning a HTTP 400 Context error.
+1. Ensure your `Modelfile` has `PARAMETER num_ctx 16384` appended to expand the dynamic ceiling.
+2. Log into the Open WebUI Admin Panel ➔ **Settings** ➔ **Models**.
+3. Click **Edit** next to `hardcore-henry:latest`.
+4. Under **Capabilities**, check the box for **Usage** and hit **Save**. This activates a live telemetry token counter beneath responses so technicians can monitor their active session utilization boundaries.
 ---
 
 ## 🔒 Cross-Platform & Dual-Boot Behavior (Windows / Linux)
