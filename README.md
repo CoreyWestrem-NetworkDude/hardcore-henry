@@ -7,10 +7,11 @@ This production guide walks you through setting up the AI engine, deploying the 
 ---
 
 ## 🏗️ Technical Architecture
-* **Core Engine:** Ollama running local `qwen2.5vl:3b` vision base weights.
+* **Core Engine:** Ollama running local `minicpm-v` multi-modal vision weights.
 * **Web Interface:** Open WebUI deployed via Docker Bridge Network.
 * **Secure Ingress:** Cloudflare Tunnel (`cloudflared`) bypassing local firewall restrictions.
 * **OS Automation:** Native Linux Systemd Service configuration.
+* **Telemetry Proxy:** Custom Open WebUI native Python `Pipe` middleware wrapper.
 
 ---
 
@@ -76,6 +77,13 @@ To ensure Hardcore-Henry goes online the second your PC boots up—without needi
 
 ---
 
+## 📊 Deploying the Real-Time Context Odometer (Pipe Proxy)
+To give technicians transparency into their 16,384 token limits, navigate to Open WebUI **Admin Panel ➔ Functions**, create a new function with the ID `hardcore_henry_triage`, paste the contents of `context_tracker_pipe.py`, and hit save. 
+
+This introduces a custom model pipe mapping into the workspace which injects a dynamic, satisfying filling-dot memory threshold bar (`[⬢⬡⬡⬡⬡]`) onto the screen interface seamlessly across both text exchanges and raw screenshots.
+
+---
+
 ## ⚡ Bulk Data Extraction & Documentation Ingestion (Admin Guide)
 
 To make Henry instantly familiar with your specific MSP environments, you can bulk-export structural tracking tables from your management software instead of copying assets one by one.
@@ -113,18 +121,12 @@ When you first log into your web interface at your public domain, go to **Settin
 * Click the **Sync/Refresh icon** to pull down the models list and hit **Save**.
 
 ### Fix 2: Bypassing Empty UI Responses (Disabling Function Injection)
-Open WebUI attempts to inject background tools into the model prompt string by default. Because `llama3` doesn't support native web extensions, this will crash the output bubble and return an empty response.
+Open WebUI attempts to inject background tools into the model prompt string by default. Because basic vision models don't support native web extensions, this will crash the output bubble and return an empty response.
 1. Navigate to **Workspace ➔ Models** or open the model properties menu.
 2. Select **Edit** on `hardcore-henry:latest`.
 3. Under the **Builtin Tools / Capabilities** section, **uncheck all active tool choices** (Web Search, Image Gen, etc.).
 4. Click **Save & Update**.
 
-### Fix 3: Handling High-Resolution Mobile Image Upload Crashes (Error 400)
-When technicians upload raw smartphone photographs of error text or hardware layouts, the default 4,096 context block will instantly saturate, returning a HTTP 400 Context error.
-1. Ensure your `Modelfile` has `PARAMETER num_ctx 16384` appended to expand the dynamic ceiling.
-2. Log into the Open WebUI Admin Panel ➔ **Settings** ➔ **Models**.
-3. Click **Edit** next to `hardcore-henry:latest`.
-4. Under **Capabilities**, check the box for **Usage** and hit **Save**. This activates a live telemetry token counter beneath responses so technicians can monitor their active session utilization boundaries.
 ---
 
 ## 🔒 Cross-Platform & Dual-Boot Behavior (Windows / Linux)
