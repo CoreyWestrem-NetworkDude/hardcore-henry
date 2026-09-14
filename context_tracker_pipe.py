@@ -1,12 +1,13 @@
 """
-title: Hardcore-Henry Custom Triage Pipe
+title: Hardcore-Henry Custom Triage Pipe (Streaming)
 author: Corey Westrem
-version: 1.2.6
+version: 1.3.0
 license: MIT
-description: Standalone custom proxy pipe that features a fully functional filling dot token meter with historical badge stripping.
+description: Custom production proxy pipe optimized for lightning-fast word-by-word text streaming and context tracking.
 """
 
 import requests
+import json
 from typing import List, Dict, Generator, Union
 
 class Pipe:
@@ -29,7 +30,7 @@ class Pipe:
         try:
             messages = body.get("messages", [])
             formatted_messages = []
-            cumulative_tokens = 0
+            input_history_tokens = 0
 
             for msg in messages:
                 role = msg.get("role", "user")
@@ -50,13 +51,13 @@ class Pipe:
                             if "base64," in img_url:
                                 img_url = img_url.split("base64,")[-1]
                             clean_images.append(img_url)
-                            cumulative_tokens += 1024
+                            input_history_tokens += 1024
                 else:
                     clean_content = str(raw_content)
                     if "Session Context:" in clean_content:
                         clean_content = clean_content.split("\n\n***\n")
 
-                cumulative_tokens += self._estimate_tokens(clean_content)
+                input_history_tokens += self._estimate_tokens(clean_content)
                 clean_msg = {"role": role, "content": clean_content}
 
                 root_images = msg.get("images") or []
@@ -65,7 +66,7 @@ class Pipe:
                         img = img.split("base64,")[-1]
                     if img not in clean_images:
                         clean_images.append(img)
-                        cumulative_tokens += 1024
+                        input_history_tokens += 1024
 
                 if clean_images and role == "user":
                     clean_msg["images"] = clean_images
@@ -76,28 +77,35 @@ class Pipe:
             payload = {
                 "model": self.valves["MODEL_NAME"],
                 "messages": formatted_messages,
-                "stream": False
+                "stream": True
             }
 
-            response = requests.post(ollama_url, json=payload, timeout=120)
-            response.raise_for_status()
-
-            henry_response = response.json().get("message", {}).get("content", "")
-            cumulative_tokens += self._estimate_tokens(henry_response)
-            
-            max_ctx = self.valves["MAX_CONTEXT"]
-            pct = (cumulative_tokens / max_ctx) * 100 if max_ctx > 0 else 0
-
-            filled_bars = min(5, int((pct / 100) * 5))
-            if cumulative_tokens > 0 and filled_bars == 0:
-                filled_bars = 1
+            def stream_generator():
+                response_text = ""
+                with requests.post(ollama_url, json=payload, stream=True, timeout=120) as r:
+                    r.raise_for_status()
+                    for line in r.iter_lines():
+                        if line:
+                            chunk = json.loads(line.decode("utf-8"))
+                            token = chunk.get("message", {}).get("content", "")
+                            response_text += token
+                            yield token
                 
-            bar_str = "[" + "⬢" * filled_bars + "⬡" * (5 - filled_bars) + "]"
-            
-            tracker_badge = f"\n\n***\n{bar_str} **Session Context:** {cumulative_tokens:,} / {max_ctx:,} ({pct:.1f}%)"
+                output_tokens = self._estimate_tokens(response_text)
+                total_session_tokens = input_history_tokens + output_tokens
+                max_ctx = self.valves["MAX_CONTEXT"]
+                pct = (total_session_tokens / max_ctx) * 100 if max_ctx > 0 else 0
 
-            return henry_response + tracker_badge
+                filled_bars = min(5, int((pct / 100) * 5))
+                if total_session_tokens > 0 and filled_bars == 0:
+                    filled_bars = 1
+                    
+                bar_str = "[" + "⬢" * filled_bars + "⬡" * (5 - filled_bars) + "]"
+                tracker_badge = f"\n\n***\n{bar_str} **Session Context:** {total_session_tokens:,} / {max_ctx:,} ({pct:.1f}%)"
+                
+                yield tracker_badge
+
+            return stream_generator()
 
         except Exception as e:
             return f"Hardcore-Henry Pipe Error: Network conversion fault. Details: {str(e)}"
-
